@@ -62,6 +62,7 @@ import com.boardgamegeek.ui.dialog.SaveViewDialogFragment;
 import com.boardgamegeek.ui.widget.TimestampView;
 import com.boardgamegeek.ui.widget.ToolbarActionItemTarget;
 import com.boardgamegeek.util.ActivityUtils;
+import com.boardgamegeek.util.CursorUtils;
 import com.boardgamegeek.util.DialogUtils;
 import com.boardgamegeek.util.HelpUtils;
 import com.boardgamegeek.util.HttpUtils;
@@ -284,8 +285,8 @@ public class CollectionFragment extends StickyHeaderListFragment implements Load
 		final Cursor cursor = (Cursor) adapter.getItem(position);
 		final int gameId = cursor.getInt(Query.GAME_ID);
 		final String gameName = cursor.getString(Query.GAME_NAME);
-		final String thumbnailUrl = cursor.getString(Query.THUMBNAIL_URL);
-		final String imageUrl = cursor.getString(Query.IMAGE_URL);
+		final String thumbnailUrl = CursorUtils.getString(cursor, Query.THUMBNAIL_URL);
+		final String imageUrl = CursorUtils.getString(cursor, Query.IMAGE_URL);
 		if (isCreatingShortcut) {
 			EventBus.getDefault().post(new GameShortcutRequestedEvent(gameId, gameName, thumbnailUrl));
 		} else {
