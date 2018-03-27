@@ -64,6 +64,7 @@ import timber.log.Timber;
 public class GameActivity extends HeroTabActivity {
 	private static final String KEY_GAME_ID = "GAME_ID";
 	private static final String KEY_GAME_NAME = "GAME_NAME";
+	private static final String KEY_IMAGE_URL = "IMAGE_URL";
 	private static final String KEY_FROM_SHORTCUT = "FROM_SHORTCUT";
 	private int gameId;
 	private String gameName;
@@ -78,13 +79,21 @@ public class GameActivity extends HeroTabActivity {
 	@ColorInt private int[] playCountColors;
 
 	public static void start(Context context, int gameId, String gameName) {
-		final Intent starter = createIntent(context, gameId, gameName);
+		start(context, gameId, gameName, null);
+	}
+
+	public static void start(Context context, int gameId, String gameName, String imageUrl) {
+		final Intent starter = createIntent(context, gameId, gameName, imageUrl);
 		if (starter == null) return;
 		context.startActivity(starter);
 	}
 
 	public static void startUp(Context context, int gameId, String gameName) {
-		final Intent starter = createIntent(context, gameId, gameName);
+		startUp(context, gameId, gameName, null);
+	}
+
+	public static void startUp(Context context, int gameId, String gameName, String imageUrl) {
+		final Intent starter = createIntent(context, gameId, gameName, imageUrl);
 		if (starter == null) return;
 		starter.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
 		starter.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -92,17 +101,18 @@ public class GameActivity extends HeroTabActivity {
 	}
 
 	@Nullable
-	public static Intent createIntent(Context context, int gameId, String gameName) {
+	public static Intent createIntent(Context context, int gameId, String gameName, String imageUrl) {
 		if (gameId == BggContract.INVALID_ID) return null;
 		final Intent starter = new Intent(context, GameActivity.class);
 		starter.putExtra(KEY_GAME_ID, gameId);
 		starter.putExtra(KEY_GAME_NAME, gameName);
+		starter.putExtra(KEY_IMAGE_URL, imageUrl);
 		return starter;
 	}
 
 	@Nullable
-	public static Intent createIntentAsShortcut(Context context, int gameId, String gameName) {
-		Intent intent = createIntent(context, gameId, gameName);
+	public static Intent createIntentAsShortcut(Context context, int gameId, String gameName, String thumbnailUrl) {
+		Intent intent = createIntent(context, gameId, gameName, thumbnailUrl);
 		if (intent == null) return null;
 		intent.putExtra(KEY_FROM_SHORTCUT, true);
 		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -122,6 +132,8 @@ public class GameActivity extends HeroTabActivity {
 		}
 
 		changeName(getIntent().getStringExtra(KEY_GAME_NAME));
+		//TODO: pass in hero image URL instead
+		//changeImage(getIntent().getStringExtra(KEY_IMAGE_URL));
 
 		initializeViewPager();
 

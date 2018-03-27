@@ -152,7 +152,7 @@ public class GameCollectionItemActivity extends HeroActivity implements Callback
 				if (gameId == BggContract.INVALID_ID) {
 					onBackPressed();
 				} else {
-					GameActivity.startUp(this, gameId, gameName);
+					GameActivity.startUp(this, gameId, gameName, imageUrl);
 				}
 				finish();
 				return true;
