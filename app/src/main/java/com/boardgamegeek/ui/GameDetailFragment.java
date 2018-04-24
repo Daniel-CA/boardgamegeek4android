@@ -1,10 +1,10 @@
 package com.boardgamegeek.ui;
 
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.Fragment;
@@ -51,14 +51,14 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 	public static GameDetailFragment newInstance(int gameId, int queryToken) {
 		Bundle args = new Bundle();
 		args.putInt(KEY_GAME_ID, gameId);
-		args.putInt(KEY_QUERY_TOKEN, queryToken);
+		args.putInt(KEY_QUERY_TOKEN, queryToken);	
 		GameDetailFragment fragment = new GameDetailFragment();
 		fragment.setArguments(args);
 		return fragment;
 	}
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.fragment_game_details, container, false);
 		unbinder = ButterKnife.bind(this, rootView);
 		setUpRecyclerView();
@@ -113,7 +113,7 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 		}
 
 		if (adapter == null) {
-			adapter = new GameDetailAdapter(getActivity(), cursor, query);
+			adapter = new GameDetailAdapter(cursor, query);
 			recyclerView.setAdapter(adapter);
 		}
 
@@ -130,20 +130,18 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 	}
 
 	public class GameDetailAdapter extends RecyclerView.Adapter<GameDetailAdapter.DetailViewHolder> {
-		private final LayoutInflater inflater;
 		private Cursor cursor;
 		private final Query query;
 
-		public GameDetailAdapter(Context context, Cursor cursor, Query query) {
+		public GameDetailAdapter(Cursor cursor, Query query) {
 			this.cursor = cursor;
 			this.query = query;
-			inflater = LayoutInflater.from(context);
 			setHasStableIds(true);
 		}
 
 		@Override
 		public DetailViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-			View view = inflater.inflate(R.layout.row_text, parent, false);
+			View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_text, parent, false);
 			return new DetailViewHolder(view);
 		}
 
@@ -169,7 +167,6 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 
 		public class DetailViewHolder extends RecyclerView.ViewHolder {
 			@BindView(android.R.id.title) TextView titleView;
-			private Uri uri;
 
 			public DetailViewHolder(View itemView) {
 				super(itemView);
@@ -178,13 +175,12 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 
 			public void bind(final Cursor cursor) {
 				titleView.setText(cursor.getString(cursor.getColumnIndex(query.getTitleColumnName())));
-				uri = query.getUri(cursor);
 				if (query.isClickable()) {
 					itemView.setOnClickListener(new OnClickListener() {
 						@Override
 						public void onClick(View v) {
-							if (uri != null) {
-								getActivity().startActivity(new Intent(Intent.ACTION_VIEW, uri));
+							if (query.getUri(cursor) != null) {
+								getActivity().startActivity(new Intent(Intent.ACTION_VIEW, query.getUri(cursor)));
 							}
 						}
 					});
