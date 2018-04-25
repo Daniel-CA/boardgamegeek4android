@@ -1,6 +1,5 @@
 package com.boardgamegeek.ui;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -51,7 +50,7 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 	public static GameDetailFragment newInstance(int gameId, int queryToken) {
 		Bundle args = new Bundle();
 		args.putInt(KEY_GAME_ID, gameId);
-		args.putInt(KEY_QUERY_TOKEN, queryToken);	
+		args.putInt(KEY_QUERY_TOKEN, queryToken);
 		GameDetailFragment fragment = new GameDetailFragment();
 		fragment.setArguments(args);
 		return fragment;
@@ -174,14 +173,14 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 			}
 
 			public void bind(final Cursor cursor) {
-				titleView.setText(cursor.getString(cursor.getColumnIndex(query.getTitleColumnName())));
+				final int id = cursor.getInt(cursor.getColumnIndex(query.getIdColumnName()));
+				final String name = cursor.getString(cursor.getColumnIndex(query.getTitleColumnName()));
+				titleView.setText(name);
 				if (query.isClickable()) {
 					itemView.setOnClickListener(new OnClickListener() {
 						@Override
 						public void onClick(View v) {
-							if (query.getUri(cursor) != null) {
-								getActivity().startActivity(new Intent(Intent.ACTION_VIEW, query.getUri(cursor)));
-							}
+							query.click(id, name);
 						}
 					});
 				}
@@ -250,12 +249,11 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 			return null;
 		}
 
-		public Uri getUri(Cursor cursor) {
-			return null;
-		}
-
 		public boolean isClickable() {
 			return true;
+		}
+
+		public void click(int id, String name) {
 		}
 	}
 
@@ -267,7 +265,7 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 
 		@Override
 		public String getIdColumnName() {
-			return Designers._ID;
+			return Designers.DESIGNER_ID;
 		}
 
 		@Override
@@ -281,8 +279,8 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 		}
 
 		@Override
-		public Uri getUri(Cursor cursor) {
-			return Designers.buildDesignerUri(cursor.getInt(0));
+		public void click(int id, String name) {
+			ProducerActivity.start(getContext(), id, ProducerType.DESIGNER);
 		}
 	}
 
@@ -294,7 +292,7 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 
 		@Override
 		public String getIdColumnName() {
-			return Artists._ID;
+			return Artists.ARTIST_ID;
 		}
 
 		@Override
@@ -308,8 +306,8 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 		}
 
 		@Override
-		public Uri getUri(Cursor cursor) {
-			return Artists.buildArtistUri(cursor.getInt(0));
+		public void click(int id, String name) {
+			ProducerActivity.start(getContext(), id, ProducerType.ARTIST);
 		}
 	}
 
@@ -321,7 +319,7 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 
 		@Override
 		public String getIdColumnName() {
-			return Publishers._ID;
+			return Publishers.PUBLISHER_ID;
 		}
 
 		@Override
@@ -335,8 +333,8 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 		}
 
 		@Override
-		public Uri getUri(Cursor cursor) {
-			return Publishers.buildPublisherUri(cursor.getInt(0));
+		public void click(int id, String name) {
+			ProducerActivity.start(getContext(), id, ProducerType.PUBLISHER);
 		}
 	}
 
@@ -402,7 +400,7 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 
 		@Override
 		public String getIdColumnName() {
-			return GamesExpansions._ID;
+			return GamesExpansions.EXPANSION_ID;
 		}
 
 		@Override
@@ -420,8 +418,8 @@ public class GameDetailFragment extends Fragment implements LoaderManager.Loader
 		}
 
 		@Override
-		public Uri getUri(Cursor cursor) {
-			return Games.buildGameUri(cursor.getInt(0));
+		public void click(int id, String name) {
+			GameActivity.start(getContext(), id, name);
 		}
 	}
 

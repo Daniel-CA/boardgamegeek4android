@@ -3,6 +3,7 @@ package com.boardgamegeek.ui;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -16,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.boardgamegeek.R;
+import com.boardgamegeek.provider.BggContract;
 import com.boardgamegeek.provider.BggContract.Artists;
 import com.boardgamegeek.provider.BggContract.Designers;
 import com.boardgamegeek.provider.BggContract.Publishers;
@@ -40,10 +42,13 @@ import hugo.weaving.DebugLog;
 
 public class ProducerFragment extends Fragment implements LoaderCallbacks<Cursor>, OnRefreshListener {
 	private static final String KEY_URI = "URI";
+	private static final String KEY_TYPE = "TYPE";
+	private static final String KEY_ID = "ID";
 	private static final int AGE_IN_DAYS_TO_REFRESH = 30;
 	private Uri uri;
 	private int token;
-	private int id;
+	private ProducerType type;
+	private int id = BggContract.INVALID_ID;
 	private boolean isRefreshing;
 
 	private Unbinder unbinder;
@@ -53,9 +58,11 @@ public class ProducerFragment extends Fragment implements LoaderCallbacks<Cursor
 	@BindView(R.id.description) TextView descriptionView;
 	@BindView(R.id.updated) TimestampView updatedView;
 
-	public static ProducerFragment newInstance(Uri uri) {
+	public static ProducerFragment newInstance(Uri uri, ProducerType type, int id) {
 		Bundle args = new Bundle();
 		args.putParcelable(KEY_URI, uri);
+		args.putSerializable(KEY_TYPE, type);
+		args.putInt(KEY_ID, id);
 		ProducerFragment fragment = new ProducerFragment();
 		fragment.setArguments(args);
 		return fragment;
@@ -66,23 +73,43 @@ public class ProducerFragment extends Fragment implements LoaderCallbacks<Cursor
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		readBundle(getArguments());
-		if (Designers.isDesignerUri(uri)) {
-			token = DesignerQuery._TOKEN;
-		} else if (Artists.isArtistUri(uri)) {
-			token = ArtistQuery._TOKEN;
-		} else if (Publishers.isPublisherUri(uri)) {
-			token = PublisherQuery._TOKEN;
+
+		if (type != null) {
+			switch (type) {
+				case DESIGNER:
+					token = DesignerQuery._TOKEN;
+					uri = Designers.buildDesignerUri(id);
+					break;
+				case ARTIST:
+					token = ArtistQuery._TOKEN;
+					uri = Artists.buildArtistUri(id);
+					break;
+				case PUBLISHER:
+					token = PublisherQuery._TOKEN;
+					uri = Publishers.buildPublisherUri(id);
+					break;
+			}
+		} else {
+			if (Designers.isDesignerUri(uri)) {
+				token = DesignerQuery._TOKEN;
+			} else if (Artists.isArtistUri(uri)) {
+				token = ArtistQuery._TOKEN;
+			} else if (Publishers.isPublisherUri(uri)) {
+				token = PublisherQuery._TOKEN;
+			}
 		}
 	}
 
 	private void readBundle(@Nullable Bundle bundle) {
 		if (bundle == null) return;
 		uri = bundle.getParcelable(KEY_URI);
+		id = bundle.getInt(KEY_ID);
+		type = (ProducerType) bundle.getSerializable(KEY_TYPE);
 	}
 
 	@Override
 	@DebugLog
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.fragment_producer, container, false);
 		unbinder = ButterKnife.bind(this, rootView);
 
@@ -165,15 +192,19 @@ public class ProducerFragment extends Fragment implements LoaderCallbacks<Cursor
 	@DebugLog
 	private void requestRefresh() {
 		if (!isRefreshing) {
-			if (token == DesignerQuery._TOKEN) {
-				TaskUtils.executeAsyncTask(new SyncDesignerTask(getContext(), id));
-				updateRefreshStatus(true);
-			} else if (token == ArtistQuery._TOKEN) {
-				TaskUtils.executeAsyncTask(new SyncArtistTask(getContext(), id));
-				updateRefreshStatus(true);
-			} else if (token == PublisherQuery._TOKEN) {
-				TaskUtils.executeAsyncTask(new SyncPublisherTask(getContext(), id));
-				updateRefreshStatus(true);
+			switch (token) {
+				case DesignerQuery._TOKEN:
+					TaskUtils.executeAsyncTask(new SyncDesignerTask(getContext(), id));
+					updateRefreshStatus(true);
+					break;
+				case ArtistQuery._TOKEN:
+					TaskUtils.executeAsyncTask(new SyncArtistTask(getContext(), id));
+					updateRefreshStatus(true);
+					break;
+				case PublisherQuery._TOKEN:
+					TaskUtils.executeAsyncTask(new SyncPublisherTask(getContext(), id));
+					updateRefreshStatus(true);
+					break;
 			}
 		} else {
 			updateRefreshStatus(false);
